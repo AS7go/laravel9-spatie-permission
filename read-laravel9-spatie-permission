@@ -1,0 +1,435 @@
+=== Очистить образы Docker очистить Docker image Стереть Docker Удалить образ удалить контейнер ===
+===================================================================
+очистить docker
+	посмотреть образы
+docker images
+	удалить неиспользуемые
+docker image prune
+	Удалить неиспользуемые тома Docker
+docker volume prune
+	Удалить неиспользуемые контейнеры Docker: 
+docker container prune
+
+	Удалить другие ненужные файлы из каталога /var/lib/docker: Перейдите в этот каталог и 		
+	вручную удалите ненужные файлы и каталоги.
+	/var/lib/docker/overlay2/
+
+--- удаления всех файлов и папок в корзине пользователя -----------
+sudo rm -r ~/.local/share/Trash/*
+
+*/
+Запускаем программу выбираем все галочки кроме Локализация - просто не пробовал
+BleachBit (as root)
+
+++++++++++++++++++++++++++++++++
+	ЭФФЕКТИВНО СРАБОТАЛО ЭТО 
+	посмотреть статистику
+docker system df
+
+	1.Очистка неиспользуемых образов:
+docker image prune -a
+
+	2.Очистка неиспользуемых контейнеров:
+docker container prune
+
+	3.Очистка неиспользуемых томов (локальных томов данных):
+docker volume prune
+
+	4.Очистка кэша сборки:
+docker builder prune
+
+	посмотреть статистику
+docker system df
+===================================================================
+===================================================================
+
+http://localhost:8000
+
+Доступ к phpMyAdmin: http://localhost:8081
+Пароль root MySQL: secret
+Имя базы данных MySQL: ale2
+Имя пользователя MySQL: root
+Пароль MySQL: secret
+
+
+---
+cd /projects/laravel9-spatie-permission$
+
+composer create-project laravel/laravel:^9.0 laravel9
+	проверяем установку, переходим в папку проекта, запускаем сервер artisan 
+cd laravel9/
+php artisan serve
+	Ctrl+C остановить сервер
+
+в настройках .env вводим данные по базе с файла docker-compose.yml
+--- .env
+DB_CONNECTION=mysql
+DB_HOST=mysqldb
+DB_PORT=3306
+DB_DATABASE=ale2
+DB_USERNAME=root
+DB_PASSWORD=secret
+
+---
+переходим в 
+cd laravel9/
+/projects/laravel9-spatie-permission/laravel9
+	даем права доступа переназначая владельца и группу для АПАЧА www-data
+sudo chown -R www-data:www-data storage/ bootstrap/cache
+---
+	создать символическую ссылку для доступа к папке storage
+php artisan storage:link 
+---
+возврашаемся в на папку назад открываем вторую вкладку cd ..
+или пользуемся двумя вкладками 
+	сам проект с laravel9
+/projects/laravel9-spatie-permission/laravel9$     -> работа с файлами проекта artisan, папка с laravel9 сайтом и БД
+
+	папка с файлами настройки контейнера и папкой проекта
+/projects/laravel9-spatie-permission$    -> запуск Dockera контейнеров php apache db MySqlAdmin, сервера, БД, гит
+	частично работаем по одному маршруту, частично по другому +папку с laravel9
+---
+	запускаем сборку контейнеров
+/projects/laravel9-spatie-permission$ docker-compose up --build -d
+	чтобы появилась БД mysql-data
+
+	переходим в /projects/laravel9-spatie-permission/laravel9$ 
+	даем права доступа БД
+/projects/laravel9-spatie-permission/laravel9$ sudo chown -R www-data:www-data mysql-data
+	(вводим пароль в Ubuntu)
+--------------------------------------------------
+!!! Без прав доступа в Docker выдае	ошибку при повторном запуске контейнера
+=> ERROR [internal] load build context                                                                                          0.0s
+------
+...
+------
+failed to solve: error from sender: open /home/aleksandr/projects/laravel9-spatie-permission/laravel9/mysql-data/#innodb_redo: permission denied
+
+	!!! На локальном компьютере даем полные права доступа, иначе permission denied
+sudo chmod -R 777 mysql-data
+	
+/projects/laravel9-spatie-permission/laravel9$ sudo chmod -R 777 mysql-data
+	изначально права 755 -запрет на запись группы и других, только владелиц имеет полный доступ
+	если группа будет добавлять в БД, то заблокирует - это и произошло
+	
+------------------------------------------------
+	После запуска контейнера доступ к сайту по пути
+http://localhost:8000/public/	
+
+	а для пути 
+http://localhost:8000
+	нужно создаем файл .htaccess в ~/projects/laravel9-spatie-permission/laravel9/
+
+# run laravel/public/index.php
+
+<IfModule mod_rewrite.c>
+    Options -MultiViews
+    RewriteEngine On
+    RewriteCond %{REQUEST_URL} !^/public/
+    RewriteRule ^(.*)$ /public/$1 [L,QSA]
+</IfModule>
+
+# run laravel/index.php
+
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php [QSA,L]
+	
+-------------------------------------------
+=======================================================================
+если хотим проверить созданиие таблицы, подключение, запись и чтение БД
+меняем файл laravel9/.htaccess это позволит запускать index.php с корня laravel9
+так
+http://localhost:8000
+
+не забыть поменять файл laravel9/.htaccess обратно как выше с перенаправлением на /public/
+---
+
+# run laravel/public/index.php
+
+# <IfModule mod_rewrite.c>
+#     Options -MultiViews
+#     RewriteEngine On
+#     RewriteCond %{REQUEST_URL} !^/public/
+#     RewriteRule ^(.*)$ /public/$1 [L,QSA]
+# </IfModule>
+
+# run laravel/index.php
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+---
+создаем файл index.php в корне laravel9 
+laravel9/index.php
+	
+ 
+<?php
+// Этот файл для теста связи с базой данных, записи и чтения
+
+echo 'Если нет ошибки то есть соединение с базой данных<br>';
+
+$host = 'mysqldb'; // Используем имя сервиса контейнера MySQL из docker-compose.yml
+$db = 'ale2'; // Указываем имя базы данных
+$user = 'root';
+$pass = 'secret';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo 'Ошибка соединения с БД ' . $e->getMessage();
+    die();
+}
+
+// Запрос для создания таблицы и заполнение
+$queryCreateTable = "
+SET NAMES utf8;
+SET time_zone = '+00:00';
+SET foreign_key_checks = 0;
+SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
+
+SET NAMES utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `flag` int DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `users` (`name`, `email`, `flag`) VALUES
+('name1', 'name1@gmail.com', 1),
+('name2', 'name2@gmail.com', 1),
+('name3', 'name3@gmail.com', 1);
+";
+
+try {
+    $pdo->exec($queryCreateTable);
+    echo 'Таблица успешно создана и заполнена данными.<br>';
+} catch (PDOException $e) {
+    echo 'Ошибка при создании таблицы: ' . $e->getMessage();
+}
+
+// Retrieve data from table
+$query = "SELECT id, name, email FROM users";
+$stmt = $pdo->prepare($query);
+$stmt->execute();
+
+// Display data
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    echo $row['name'] . ' - ' . $row['email'] . '<br>';
+}
+?>
+
+=======================================================================
+-------------------------------------------
+
+	подключение git
+	/projects/laravel9-spatie-permission$ 
+git init
+git status
+	Текущая ветка: master
+	переименовало master в main
+git branch -m master main
+git status
+	выдал Текущая ветка: main
+
+
+
+
+
+
+
+
+!!! Другой вариант дать права доступа для всех на все
+	и даем права доступа в !!! каталоге с laravel9
+sudo chmod 777 -R storage/
+
+sudo chmod -R 777 bootstrap/cache
+sudo chmod -R 777 mysql-data
+
+docker-compose up --build -d
+docker-compose down
+	посмотреть права всех папок и файлов в каталоге 
+ls -lR mysql-data
+
+(АЛЬТЕРНАТИВА СМЕНА ВЛАДЕЛЬЦА ПАПОК ДЛЯ АПАЧ ВМЕСТО(777-ПРАВ, )
+sudo chown -R www-data:www-data storage/ bootstrap/cache mysql-data)
+
+5 === проверяем artisan
+php artisan
+	создать символическую ссылку для доступа к папке storage
+php artisan storage:link 
+
+
+
+
+---
+
+
+
+	проект контейнеры запускать из папки 
+cd /projects/laravel9-spatie-permission
+	командой 
+docker-compose up --build -d
+ !!!не из cd /laravel9
+
+проверка установки Laravel9 переходим в папку набираем команду
+cd laravel9/
+~/projects/laravel9-spatie-permission/laravel9$ php artisan
+возврат на паку назад 
+cd ..
+
+если файлы Dockerfile и docker-compose.yml 
+находятся в папке
+/projects/laravel9-spatie-permission$
+а папка с роектом laravel9 находится в папке 
+/projects/laravel9-spatie-permission/laravel9$
+с какой папки нужно запускать docker-compose up --build -d
+
+вот содержимое файлов Dockerfile и docker-compose.yml
+
+# Использовать официальный образ PHP с предустановленным Apache
+FROM php:8.2-apache
+
+# Обновление пакетного менеджера и установка MySQL клиента
+RUN apt-get update && apt-get install -y default-mysql-client
+
+# Установить PDO и PDO MySQL расширения PHP
+RUN docker-php-ext-install pdo pdo_mysql \
+    && docker-php-ext-enable pdo_mysql
+
+# Включить модули Apache
+RUN a2enmod rewrite
+
+# Установить рабочий каталог в /var/www/html
+WORKDIR /var/www/html
+
+# Скопировать каталог вашего проекта Laravel # Копирует все содержимое текущего каталога
+COPY ../laravel9 . 
+
+# Установить Composer (если еще не установлен)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Установить зависимости проекта
+RUN composer install
+
+# Настроить разрешения для каталогов storage и bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Открыть порт (при необходимости изменить)
+EXPOSE 80
+
+# Использовать Apache в качестве точки входа по умолчанию
+CMD ["apache2-foreground"]
+и version: '3.9'
+services:
+  webserver:
+    container_name: PHP1
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./laravel9:/var/www/html
+    ports:
+      - 8000:80
+    depends_on:
+      - mysqldb
+
+  mysqldb:
+    container_name: mysql1
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: ale2
+      # MYSQL_USER: root # при создании контейнера выдает ошибку, нужно убрать эту строку
+  	  # MYSQL_PASSWORD: secret # и эту строку
+    volumes:
+      - ./laravel9/mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  phpmyadmin:
+    container_name: phpmyadmin1
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - mysqldb
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysqldb
+      MYSQL_ROOT_PASSWORD: secret
+      
+--------------------------
+
+/projects/laravel9-spatie-permission/laravel9$ ls -l storage/ bootstrap/cache mysql-data
+ls: невозможно получить доступ к 'mysql-data': Нет такого файла или каталога
+bootstrap/cache:
+итого 24
+-rwxrwxr-x 1 aleksandr aleksandr  1082 апр 27 08:37 packages.php
+-rwxrwxr-x 1 aleksandr aleksandr 19191 апр 27 08:37 services.php
+
+storage/:
+итого 12
+drwxrwxr-x 3 aleksandr aleksandr 4096 янв 31  2023 app
+drwxrwxr-x 6 aleksandr aleksandr 4096 янв 31  2023 framework
+drwxrwxr-x 2 aleksandr aleksandr 4096 янв 31  2023 logs
+---------------------------
+sudo chown -R www-data:www-data storage/ bootstrap/cache mysql-data
+[sudo] пароль для aleksandr: 
+chown: невозможно получить доступ к 'mysql-data': Нет такого файла или каталога
+aleksandr@E7240:~/projects/laravel9-spatie-permission/laravel9$ ls -l storage/ bootstrap/cache mysql-data
+ls: невозможно получить доступ к 'mysql-data': Нет такого файла или каталога
+bootstrap/cache:
+итого 24
+-rwxrwxr-x 1 www-data www-data  1082 апр 27 08:37 packages.php
+-rwxrwxr-x 1 www-data www-data 19191 апр 27 08:37 services.php
+
+storage/:
+итого 12
+drwxrwxr-x 3 www-data www-data 4096 янв 31  2023 app
+drwxrwxr-x 6 www-data www-data 4096 янв 31  2023 framework
+drwxrwxr-x 2 www-data www-data 4096 янв 31  2023 logs
+aleksandr@E7240:~/projects/laravel9-spatie-permission/laravel9$ 
+
+-------------------------
+
+php artisan storage:link 
+
+-------------------------
+переходим в /projects/laravel9-spatie-permission/laravel9$ cd ..
+/projects/laravel9-spatie-permission$
+
+-------------------------
+/projects/laravel9-spatie-permission$ docker-compose up --build -d
+-------------------------
+	переходим в cd /laravel9
+/projects/laravel9-spatie-permission/laravel9$
+	запускаем к созданной докером папке mysql-data доступы разрешения
+------------------------
+/projects/laravel9-spatie-permission$ docker-compose down
+------------------------
+projects/laravel9-spatie-permission/laravel9$ sudo chmod -R 777 mysql-data
+
+------------------------
+sudo chown -R www-data:www-data mysql-data
+------------------------
+по каким-то причинам эти строки   
+      # MYSQL_USER: root
+      # MYSQL_PASSWORD: secret 
+перед запуском контейнера в файле docker-compose.yml нужно ремировать, 
+иначе не запустятся контейнер с базой данных и папка mysql-data пуста
+------------------------
+
+------------------------
+
+------------------------
+
+------------------------
+
+
