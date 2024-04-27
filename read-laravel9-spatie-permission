@@ -229,6 +229,9 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 =======================================================================
 -------------------------------------------
 
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+=======================================================================
 	подключение git
 	/projects/laravel9-spatie-permission$ 
 git init
@@ -238,12 +241,41 @@ git status
 git branch -m master main
 git status
 	выдал Текущая ветка: main
+	
+git config user.email "sh17aleksandr@gmail.com"
+git config user.name "Aleksandr" 
 
+	в laravel9/.gitignore 
+	добавляем папку 
+/mysql-data
+	
+git add .
+git commit -m '1'
 
+git@github.com:AS7go/laravel9-spatie-permission.git
 
+------------------------------------------------------
+Quick setup — if you’ve done this kind of thing before
+git@github.com:AS7go/laravel9-spatie-permission.git
+Get started by creating a new file or uploading an existing file. We recommend every repository include a README, LICENSE, and .gitignore.
 
+…or create a new repository on the command line
+echo "# laravel9-spatie-permission" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin git@github.com:AS7go/laravel9-spatie-permission.git
+git push -u origin main
 
-
+---
+…or push an existing repository from the command line
+git remote add origin git@github.com:AS7go/laravel9-spatie-permission.git
+git branch -M main
+git push -u origin main
+------------------------------------------------------
+=======================================================================
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !!! Другой вариант дать права доступа для всех на все
