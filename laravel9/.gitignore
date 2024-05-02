@@ -17,5 +17,4 @@ yarn-error.log
 /.idea
 /.vscode
 /mysql-data
-read-laravel9-spatie-permission.txt
-test_js_py_bash
+index.php
