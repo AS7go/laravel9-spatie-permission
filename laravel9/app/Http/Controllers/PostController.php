@@ -9,7 +9,7 @@ class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::orderBy('created_at','desc')->get();
+        $posts = Post::orderBy('created_at', 'desc')->get();
 
         return view('dashboard', compact([
             'posts'
@@ -24,8 +24,8 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'=>'required|string|max:255',
-            'text'=>'required|string',
+            'name' => 'required|string|max:255',
+            'text' => 'required|string',
         ]);
 
         Post::create($request->all());
@@ -35,7 +35,7 @@ class PostController extends Controller
 
     public function edit($id)
     {
-        $post=Post::findOrFail($id);
+        $post = Post::findOrFail($id);
 
         return view('edit-new-post', compact([
             'post'
@@ -45,13 +45,21 @@ class PostController extends Controller
     public function update($id, Request $request)
     {
         $request->validate([
-            'name'=>'required|string|max:255',
-            'text'=>'required|string',
+            'name' => 'required|string|max:255',
+            'text' => 'required|string',
         ]);
 
-        $post=Post::findOrFail($id);
+        $post = Post::findOrFail($id);
         $post->update($request->all());
 
         return redirect()->back()->with('status', 'Post updated!');
+    }
+
+    public function delete($id)
+    {
+        $post = Post::findOrFail($id);
+        $post->delete();
+
+        return redirect()->route('dashboard')->with('status', 'Post deleted!');
     }
 }
