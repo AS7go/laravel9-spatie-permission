@@ -76,7 +76,7 @@ class RoleController extends Controller
         $permissions = Permission::whereIn('id', $request->permissions)->get();
         $role->syncPermissions($permissions);
 
-        return redirect()->back()->with('status', 'Role update!');
+        return redirect()->back()->with('status', 'Role updated!');
     }
 
     public function destroy(Role $role)
