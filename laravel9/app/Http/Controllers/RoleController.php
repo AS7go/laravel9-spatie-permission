@@ -12,7 +12,7 @@ class RoleController extends Controller
     public function index()
     {
         // $roles = Role::orderBy('name')->get(); //виден super-user
-        $roles = Role::orderBy('name')->where('name','!=','super-user')->get();
+        $roles = Role::orderBy('name')->where('name', '!=', 'super-user')->get();
 
         return view('roles.index', compact([
             'roles'
@@ -31,26 +31,20 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'=> 'required|max:255',
-            'permissions.*'=> 'required|integer|exists:permissions,id',
+            'name' => 'required|max:255',
+            'permissions.*' => 'required|integer|exists:permissions,id',
         ]);
 
-        $newRole=Role::create([
-            'name'=>$request->name
+        $newRole = Role::create([
+            'name' => $request->name
         ]);
 
-        $permissions=Permission::whereIn('id', $request->permissions)->get();
+        $permissions = Permission::whereIn('id', $request->permissions)->get();
         $newRole->syncPermissions($permissions);
 
         return redirect()->back()->with('status', 'Role added!');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Role  $role
-     * @return \Illuminate\Http\Response
-     */
     public function show(Role $role)
     {
         //
@@ -58,35 +52,43 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
+        $role=Role::where('name', '!=', 'super-user')->findOrFail($role->id);
         $permissions = Permission::orderBy('name')->get();
 
         return view('roles.edit', compact([
             'permissions',
             'role',
         ]));
-        
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Role  $role
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, Role $role)
     {
-        //
+        $request->validate([
+            'name' => 'required|max:255',
+            'permissions' => 'required',
+            'permissions.*' => 'required|integer|exists:permissions,id',
+        ]);
+        
+        $role=Role::where('name', '!=', 'super-user')->findOrFail($role->id);
+        $role->update([
+            'name' => $request->name
+        ]);
+        $permissions = Permission::whereIn('id', $request->permissions)->get();
+        $role->syncPermissions($permissions);
+
+        return redirect()->back()->with('status', 'Role update!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Role  $role
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Role $role)
     {
-        //
+        // Перед удалением роли необходимо убедиться, что роль не "super-user"
+        if ($role->name === 'super-user') {
+            return redirect()->back()->with('error', 'You cannot delete the super-user role.');
+        }
+
+        // Удаление роли
+        $role->delete();
+
+        return redirect()->back()->with('status', 'Role deleted!');
     }
 }
